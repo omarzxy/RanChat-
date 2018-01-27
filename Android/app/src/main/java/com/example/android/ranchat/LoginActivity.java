@@ -1,11 +1,17 @@
 package com.example.android.ranchat;
 
 import android.os.Bundle;
+import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.v7.app.AppCompatActivity;
+import android.util.Log;
 import android.view.View;
 import android.widget.TextView;
+import android.widget.Toast;
 
+import com.google.android.gms.tasks.OnCompleteListener;
+import com.google.android.gms.tasks.Task;
+import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 
@@ -16,6 +22,9 @@ import com.google.firebase.auth.FirebaseUser;
 public class LoginActivity extends AppCompatActivity {
 
     private FirebaseAuth mAuth;
+    private FirebaseAuth.AuthStateListener mAuthListener;
+    private static final String TAG = "Anonymous Auth";
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -23,40 +32,58 @@ public class LoginActivity extends AppCompatActivity {
         setContentView(R.layout.activity_login);
 
         // [START initialize_auth]
-        mAuth = FirebaseAuth.getInstance();
+            mAuth = FirebaseAuth.getInstance();
         // [END initialize_auth]
 
-//        public void signIn(View v) {
-//        }
+        // active listen to user logged in or not.
+        mAuthListener = new FirebaseAuth.AuthStateListener() {
+            @Override
+            public void onAuthStateChanged(@NonNull FirebaseAuth firebaseAuth) {
+                FirebaseUser user = firebaseAuth.getCurrentUser();
+                if (user != null) {
+                    // User is signed in
+                    Log.d(TAG, "onAuthStateChanged:signed_in:" + user.getUid());
+                } else {
+                    // User is signed out
+                    Log.d(TAG, "onAuthStateChanged:signed_out");
+                }
+
+            }
+        };
+
+
     }
 
     @Override
     public void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
-        FirebaseUser currentUser = mAuth.getCurrentUser();
-        updateUI(currentUser);
+        mAuth.addAuthStateListener(mAuthListener);
     }
 
-    private void updateUI(FirebaseUser user) {
-        hideProgressDialog();
+    public void signIn(View view){
+        mAuth.signInAnonymously()
+                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
+                    @Override
+                    public void onComplete(@NonNull Task<AuthResult> task) {
+                        Log.d(TAG, "OnComplete : " +task.isSuccessful());
+                        if (!task.isSuccessful()) {
+                            Log.w(TAG, "Failed : ", task.getException());
+                            Toast.makeText(LoginActivity.this, "Authentication failed.", Toast.LENGTH_SHORT).show();
+                        }
 
-        TextView idView = findViewById(R.id.anonymous_status_id);
-        TextView emailView = findViewById(R.id.anonymous_status_email);
-        boolean isSignedIn = (user != null);
 
-        // Status text
-        if (isSignedIn) {
-            idView.setText(getString(R.string.id_fmt, user.getUid()));
-            emailView.setText(getString(R.string.email_fmt, user.getEmail()));
-        } else {
-            idView.setText(R.string.signed_out);
-            emailView.setText(null);
+                    }
+                });
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+        if (mAuthListener != null) {
+            mAuth.removeAuthStateListener(mAuthListener);
         }
-
-        // Button visibility
-        findViewById(R.id.button_anonymous_sign_in).setEnabled(!isSignedIn);
-        findViewById(R.id.button_anonymous_sign_out).setEnabled(isSignedIn);
-        findViewById(R.id.button_link_account).setEnabled(isSignedIn);
     }
+
+
 }
