@@ -15,6 +15,14 @@
       },
       "oauth_client": [
         {
+          "client_id": "275836502501-r7j981dj2fs3m9a0smspsbg2bthilu9d.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.android.ranchat",
+            "certificate_hash": "1a441866df9f60a9e50df2c581ab3b5a318fead8"
+          }
+        },
+        {
           "client_id": "275836502501-dq1jhp5gq27da99i68bv6qt2ob74em0e.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
